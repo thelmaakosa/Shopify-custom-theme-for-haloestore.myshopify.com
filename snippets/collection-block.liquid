@@ -1,0 +1,40 @@
+<div class="product-block {% if settings.prod_thumb_variable_width %}variable-width{% else %}fixed-width{% endif %} collection-block" data-collection-id="{{ collection.id }}" {{ custom_attrs }}>
+  <div class="block-inner">
+    <a class="product-link" href="{{ collection.url }}">
+
+      <div class="image-cont">
+        {% if collection.image %}
+          {% assign collection_image = collection.image %}
+        {% else %}
+          {% assign collection_image = collection.products.first.featured_image %}
+        {% endif %}
+
+        {%- if settings.prod_thumb_variable_width -%}
+          <style type="text/css">
+          .collection-block[data-collection-id="{{ collection.id }}"] .block-inner .image-cont .rimage-outer-wrapper {
+            width: {{ collection_image.aspect_ratio | times: settings.prod_thumb_height | floor }}px;
+          }
+          @media (max-width: 767px) {
+            .collection-block[data-collection-id="{{ collection.id }}"] .block-inner .image-cont .rimage-outer-wrapper {
+              width: {{ collection_image.aspect_ratio | times: 180 | floor }}px;
+            }
+          }
+          </style>
+        {%- endif -%}
+        {% include 'responsive-image', image: collection_image, manual_image_load: manual_image_load %}
+      </div>
+
+      <div class="product-info">
+        <span class="productlabel general">
+          <span>
+            <span class="title">{{ collection.title }}</span>
+            {% if section.settings.show_count and collection.all_products_count > 0 %}
+            <span class="count">{{ 'collections.general.product_count' | t: count: collection.all_products_count }}</span>
+            {% endif %}
+          </span>
+        </span>
+      </div>
+
+    </a>
+  </div>
+</div>

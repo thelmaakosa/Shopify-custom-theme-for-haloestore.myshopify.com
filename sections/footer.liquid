@@ -1,0 +1,111 @@
+<div data-section-type="footer">
+  {% if linklists[section.settings.menu_linklist].links.size > 0 %}
+  <div class="nav-row" role="navigation" aria-label="{{ 'layout.footer.navigation_aria_label' | t | escape }}">
+    <div class="multi-level-nav">
+      <div class="tier-1">
+        <ul>
+          {% for link in linklists[section.settings.menu_linklist].links %}
+          <li {% if link.active %}class="active"{% endif %}>
+            <a href="{{ link.url }}" {% if link.links != blank %}class="has-children" aria-haspopup="true"{% endif %}>
+              {{ link.title }}
+              {% if link.links != blank %}
+              <span class="exp"><span>+</span>{% include 'icon-chevron-down' %}</span>
+              {% endif %}
+            </a>
+
+            {% if link.links != blank %}
+            <ul>
+              {% for child_link in link.links %}
+              <li {% if child_link.active %}class="active"{% endif %}>
+                <a href="{{ child_link.url }}" class="{% if child_link.links != blank %}has-children {% if child_link.title contains 'LISTED' %}listing-title{% endif %}{% endif %}" {% if child_link.links != blank %}aria-haspopup="true"{% endif %}>
+                  {{ child_link.title | remove: ' LISTED' }}
+                  {% if child_link.links != blank %}
+                  <span class="exp"><span>+</span>{% include 'icon-chevron-down' %}</span>
+                  {% endif %}
+                </a>
+
+                {% if child_link.links != blank %}
+                <ul{% if child_link.title contains 'LISTED' %} class="listed"{% endif %}>
+                  {% for child_child_link in child_link.links %}
+                  <li {% if child_child_link.active %}class="active"{% endif %}>
+                    <a href="{{ child_child_link.url }}">{{ child_child_link.title }}</a>
+                  </li>
+                  {% endfor %}
+                </ul>
+                {% endif %}
+              </li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div><!-- /.nav-row -->
+  {% endif %}
+
+  <div class="lower cf">
+    {% if section.settings.show_social_icons %}
+    {% include 'social-icons' %}
+    {% endif %}
+
+    {% if section.settings.signup_show %}
+    <div class="interact">
+      <div class="signup-form-title">{{ section.settings.newsletter_title }}</div>
+      <div class="signup-form-subtitle user-content">{{ section.settings.newsletter_text }}</div>
+      {% include 'signup-form' %}
+    </div><!-- /.interact -->
+    {% endif %}
+
+    <div class="copyright">
+      <span class="copy">&copy; {{ "now" | date: "%Y" }} {{ shop.name | link_to: '/' }}.</span>
+
+      {{powered_by_Birdiebox}}
+    </div><!-- /.copyright -->
+
+    <div class="payment-methods">
+      {% for type in shop.enabled_payment_types %}
+        {{ type | payment_type_svg_tag: class:'payment-icon' }}
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+
+{% schema %}
+  {
+    "name": "Footer",
+    "settings": [
+      {
+        "type": "link_list",
+        "id": "menu_linklist",
+        "label": "Menu",
+        "default": "footer"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_social_icons",
+        "label": "Show social icons",
+        "default": true
+      },
+      {
+        "type": "checkbox",
+        "id": "signup_show",
+        "label": "Show newsletter signup",
+        "default": true
+      },
+      {
+        "type": "text",
+        "id": "newsletter_title",
+        "label": "Heading",
+        "default": "Signup for our newsletter"
+      },
+      {
+        "type": "richtext",
+        "id": "newsletter_text",
+        "label": "Subheading"
+      }
+    ]
+  }
+{% endschema %}

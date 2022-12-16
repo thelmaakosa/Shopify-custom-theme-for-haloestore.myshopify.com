@@ -1,0 +1,498 @@
+<div data-section-type="nested-sections">
+  {% if section.settings.show_page_content %}
+    <div class="container cf">
+      <div class="page-header">
+        <h1 class="majortitle">{{ page.title }}</h1>
+      </div>
+      <div class="user-content row-spacing {% if settings.lightbox_imgs %}lightboximages{% endif %}">
+        {{ page.content }}
+      </div>
+    </div>
+  {% endif %}
+
+  {% for block in section.blocks %}
+    {% if block.type == 'richtext' %}
+    
+      <div class="article">
+        <div class="container fully-spaced-row" {{ block.shopify_attributes }}>
+          <div class="align-{{ block.settings.alignment }}">
+            {% if block.settings.title != blank %}
+            <h1 class="majortitle in-content">{{ block.settings.title | escape }}</h1>
+            {% endif %}
+
+            <div class="user-content">{{ block.settings.text }}</div>
+          </div>
+        </div>
+      </div>
+
+    {% elsif block.type == 'image-with-text' %}
+
+      <div class="container strongly-spaced-row layout-content-with-image-{{ block.settings.layout }} valign-{{ block.settings.alignment}} cf" {{ block.shopify_attributes }}>
+        {% if block.settings.layout == 'left' %}
+        <div class="image-cont">
+          {% if block.settings.image_link_url != blank %}<a href="{{ block.settings.image_link_url }}">{% endif %}
+          {% if block.settings.image == blank %}
+          <div class="placeholder-image">{{ 'image' | placeholder_svg_tag: 'placeholder-svg' }}</div>
+          {% else %}
+          <img src="{{ block.settings.image | img_url: '800x' }}" alt="{{ block.settings.image.alt | escape }}" />
+          {% endif %}
+          {% if block.settings.image_link_url != blank %}</a>{% endif %}
+        </div>{% endif %}<div class="content">
+
+        {% if block.settings.title != blank %}
+        <h1 class="majortitle in-content">{{ block.settings.title | escape }}</h1>
+        {% endif %}
+
+        <div class="user-content">{{ block.settings.text }}</div>
+
+        {% if block.settings.cta_text != blank %}
+        <div class="spaced-row-above">
+          <a class="button altcolour" href="{{ block.settings.cta_url | default: '#' }}">{{ block.settings.cta_text | escape }}</a>
+        </div>
+        {% endif %}
+
+        </div>{% if block.settings.layout == 'right' %}<div class="image-cont">
+          {% if block.settings.image_link_url != blank %}<a href="{{ block.settings.image_link_url }}">{% endif %}
+          {% if block.settings.image == blank %}
+          <div class="placeholder-image">{{ 'image' | placeholder_svg_tag: 'placeholder-svg' }}</div>
+          {% else %}
+          <img src="{{ block.settings.image | img_url: '800x' }}" alt="{{ block.settings.image.alt | escape }}" />
+          {% endif %}
+          {% if block.settings.image_link_url != blank %}</a>{% endif %}
+        </div>
+        {% endif %}
+      </div>
+
+    {% elsif block.type == 'collage-with-text' %}
+
+      <div class="container strongly-spaced-row layout-content-with-image-{{ block.settings.layout }} layout-content-with-image-mobile-{{ block.settings.layout_mobile }} layout-content-with-image--large-image valign-middle cf" data-nested-section-type="collage-with-text" {{ block.shopify_attributes }}>
+        {%- capture image_html -%}
+          <div class="image-cont micro-collage micro-collage--style-{{ block.settings.style }}">
+            <div class="micro-collage__image-1-frame lazyload--placeholder">
+              {% if block.settings.cta_url != blank %}<a href="{{ block.settings.cta_url }}">{% endif %}
+              {% if block.settings.image_1 == blank %}
+              <div class="placeholder-image">{{ 'image' | placeholder_svg_tag: 'placeholder-svg' }}</div>
+              {% else %}
+                <div class="micro-collage__image fade-in lazyload"
+                  data-bgset="{% include 'bgset', image: block.settings.image_1 %}"
+                  data-sizes="auto"
+                  data-parent-fit="cover"></div>
+              {% endif %}
+              {% if block.settings.cta_url != blank %}</a>{% endif %}
+            </div>
+            <div class="micro-collage__image-2-frame lazyload--placeholder">
+              {% if block.settings.image_2 == blank %}
+              <div class="placeholder-image">{{ 'image' | placeholder_svg_tag: 'placeholder-svg' }}</div>
+              {% else %}
+                <div class="micro-collage__image fade-in lazyload"
+                  data-bgset="{% include 'bgset', image: block.settings.image_2 %}"
+                  data-sizes="auto"
+                  data-parent-fit="cover"></div>
+              {% endif %}
+            </div>
+          </div>
+        {%- endcapture -%}
+
+        {% if block.settings.layout == 'left' %}{{ image_html }}{% endif %}<div class="content">
+
+        {% if block.settings.title != blank %}
+        <h1 class="majortitle in-content">{{ block.settings.title | escape }}</h1>
+        {% endif %}
+
+        <div class="user-content">{{ block.settings.text }}</div>
+
+        {% if block.settings.cta_text != blank %}
+        <div class="spaced-row-above">
+          <a class="button altcolour" href="{{ block.settings.cta_url | default: '#' }}">{{ block.settings.cta_text | escape }}</a>
+        </div>
+        {% endif %}
+
+        </div>{% if block.settings.layout == 'right' %}{{ image_html }}{% endif %}
+      </div>
+
+    {% elsif block.type == 'image-with-text-overlay' %}
+
+      <div class="slide full-width-image block-id-{{ block.id }}" data-nested-section-type="text-image-overlay" {{ block.shopify_attributes }}>
+        {% unless settings.use_fullwidth_layout %}<div class="container">{% endunless %}
+
+        <div class="scaled-text-base">
+          <{% if block.settings.link_url != blank%}a href="{{ block.settings.link_url }}"{% else %}div{% endif %}
+            class="img-cont {% if block.settings.image != blank %}fade-in lazyload{% endif %}"
+            {% if block.settings.image != blank %}
+            data-bgset="{% include 'bgset', image: block.settings.image %}"
+            data-sizes="auto"
+            data-parent-fit="cover"{% endif %}>
+            {% if block.settings.image == blank %}
+            <div class="placeholder-image placeholder--banner {% if block.settings.title != blank or block.settings.text != blank %}dark{% endif %}">
+              {{ 'lifestyle-1' | placeholder_svg_tag: 'placeholder-svg' }}
+            </div>
+            {% else %}
+              {% include 'responsive-image', image: block.settings.image, manual_image_load: true %}
+            {% endif %}
+
+            {% if block.settings.title != blank or block.settings.text != blank %}
+            <div class="overlay-text overlay-{{ block.settings.position }}">
+              <div class="inner">
+                <div class="text">
+                  <div class="scaled-text">
+                    <div>{{ block.settings.title | escape }}</div>
+                    <div class="second-line">{{ block.settings.text | escape }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% endif %}
+          </{% if block.settings.link_url != blank %}a{% else %}div{% endif %}>
+        </div>
+
+        {% unless settings.use_fullwidth_layout %}</div>{% endunless %}
+      </div>
+
+      <style type="text/css">
+        .block-id-{{ block.id }} .overlay-text .text > div {
+          color: {{ block.settings.overlay_color }};
+          background: {{ block.settings.overlay_bg | hex_to_rgba: 0.8 }};
+        }
+      </style>
+
+    {% elsif block.type == 'video' %}
+
+      <div class="{% unless settings.use_fullwidth_layout %}container fully-spaced-row{% endunless %}" data-nested-section-type="video" {{ block.shopify_attributes }}>
+        {% if block.settings.title != blank %}
+          <h1 class="hometitle h4-style align-center">{{ block.settings.title }}</h1>
+        {% endif %}
+
+        {% if block.settings.video_url != blank %}
+        <div class="video-container" data-video-id="{{ block.settings.video_url.id }}" data-video-type="{{ block.settings.video_url.type }}" data-video-autoplay="{{ block.settings.autoplay }}"></div>
+        {% endif %}
+      </div>
+
+    {% endif %}
+  {% endfor %}
+</div>
+
+
+{% schema %}
+  {
+    "name": "Story page",
+    "settings": [
+      {
+        "type": "checkbox",
+        "id": "show_page_content",
+        "label": "Show page content",
+        "default": true
+      }
+    ],
+    "blocks": [
+      {
+        "type": "richtext",
+        "name": "Rich text",
+        "settings": [
+          {
+            "type": "text",
+            "id": "title",
+            "label": "Heading",
+            "default": "Rich text"
+          },
+          {
+            "type": "richtext",
+            "id": "text",
+            "label": "Text",
+            "default": "<p>Use this text to share information about your store with your customers.</p><p>Describe products, share announcements, or welcome customers to your store.</p>"
+          },
+          {
+            "type": "select",
+            "id": "alignment",
+            "label": "Alignment",
+            "default": "center",
+            "options": [
+              {
+                "value": "left",
+                "label": "Left"
+              },
+              {
+                "value": "center",
+                "label": "Center"
+              },
+              {
+                "value": "right",
+                "label": "Right"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "image-with-text",
+        "name": "Image with text",
+        "settings": [
+          {
+            "type": "image_picker",
+            "id": "image",
+            "label": "Image"
+          },
+          {
+            "type": "url",
+            "id": "image_link_url",
+            "label": "Image link"
+          },
+          {
+            "type": "select",
+            "id": "layout",
+            "label": "Layout",
+            "options": [
+              {
+                "value": "right",
+                "label": "Text on left"
+              },
+              {
+                "value": "left",
+                "label": "Text on right"
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "id": "title",
+            "label": "Heading",
+            "default": "Image with text"
+          },
+          {
+            "type": "richtext",
+            "id": "text",
+            "label": "Text",
+            "default": "<p>Pair large text with an image to give focus to your chosen product, collection, or blog post. Add details on availability, style, or even provide a review.</p>"
+          },
+          {
+            "type": "text",
+            "id": "cta_text",
+            "label": "Button text",
+            "default": "Read more"
+          },
+          {
+            "type": "url",
+            "id": "cta_url",
+            "label": "Button link"
+          },
+          {
+            "type": "select",
+            "id": "alignment",
+            "label": "Vertical alignment",
+            "default": "middle",
+            "options": [
+              {
+                "value": "top",
+                "label": "Top"
+              },
+              {
+                "value": "middle",
+                "label": "Middle"
+              },
+              {
+                "value": "bottom",
+                "label": "Bottom"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "collage-with-text",
+        "name": "Collage with text",
+        "settings": [
+          {
+            "type": "select",
+            "id": "layout",
+            "label": "Collage alignment - desktop",
+            "options": [
+              {
+                "value": "left",
+                "label": "Left"
+              },
+              {
+                "value": "right",
+                "label": "Right"
+              }
+            ],
+            "default": "right"
+          },
+          {
+            "type": "select",
+            "id": "layout_mobile",
+            "label": "Collage position - mobile",
+            "options": [
+              {
+                "value": "above",
+                "label": "Above"
+              },
+              {
+                "value": "below",
+                "label": "Below"
+              }
+            ],
+            "default": "above"
+          },
+          {
+            "type": "select",
+            "id": "style",
+            "label": "Collage style",
+            "options": [
+              {
+                "value": "1",
+                "label": "1"
+              },
+              {
+                "value": "2",
+                "label": "2"
+              },
+              {
+                "value": "3",
+                "label": "3"
+              },
+              {
+                "value": "4",
+                "label": "4"
+              },
+              {
+                "value": "5",
+                "label": "5"
+              }
+            ],
+            "default": "1"
+          },
+          {
+            "type": "header",
+            "content": "Image 1"
+          },
+          {
+            "type": "image_picker",
+            "id": "image_1",
+            "label": "Image"
+          },
+          {
+            "type": "header",
+            "content": "Image 2"
+          },
+          {
+            "type": "image_picker",
+            "id": "image_2",
+            "label": "Image"
+          },
+          {
+            "type": "header",
+            "content": "Text"
+          },
+          {
+            "type": "text",
+            "id": "title",
+            "label": "Heading",
+            "default": "Collage with text"
+          },
+          {
+            "type": "richtext",
+            "id": "text",
+            "label": "Text",
+            "default": "<p>Pair some text with a couple of images to give focus to your chosen product, collection, or blog post. Add details on availability, style, or even provide a review.</p>"
+          },
+          {
+            "type": "text",
+            "id": "cta_text",
+            "label": "Button text",
+            "default": "Read more"
+          },
+          {
+            "type": "url",
+            "id": "cta_url",
+            "label": "Button link"
+          }
+        ]
+      },
+      {
+        "type": "image-with-text-overlay",
+        "name": "Image with text overlay",
+        "settings": [
+          {
+            "type": "image_picker",
+            "id": "image",
+            "label": "Image",
+            "info": "1200 x 400px (recommended)"
+          },
+          {
+            "type": "text",
+            "id": "title",
+            "label": "Heading",
+            "default": "Image with text overlay"
+          },
+          {
+            "type": "text",
+            "id": "text",
+            "label": "Subheading"
+          },
+          {
+            "type": "select",
+            "id": "position",
+            "label": "Text alignment",
+            "options": [
+              {
+                "value": "left",
+                "label": "Left"
+              },
+              {
+                "value": "centre",
+                "label": "Centre"
+              },
+              {
+                "value": "right",
+                "label": "Right"
+              }
+            ],
+            "default": "centre"
+          },
+          {
+            "type": "color",
+            "id": "overlay_color",
+            "label": "Text color",
+            "default": "#ffffff"
+          },
+          {
+            "type": "color",
+            "id": "overlay_bg",
+            "label": "Overlay background",
+            "default": "#464654"
+          },
+          {
+            "type": "url",
+            "id": "link_url",
+            "label": "Link"
+          }
+        ]
+      },
+      {
+        "type": "video",
+        "name": "Video",
+        "settings": [
+          {
+            "type": "text",
+            "id": "title",
+            "label": "Heading"
+          },
+          {
+            "id": "video_url",
+            "type": "video_url",
+            "label": "Video link",
+            "accept": ["youtube", "vimeo"],
+            "info": "Supports Youtube and Vimeo",
+            "default": "https:\/\/www.youtube.com\/watch?v=_9VUPq3SxOc"
+          },
+          {
+            "id": "autoplay",
+            "type": "checkbox",
+            "label": "Autoplay",
+            "default": false,
+            "info": "Some mobile devices do not allow autoplay"
+          }
+        ]
+      }
+    ]
+  }
+{% endschema %}

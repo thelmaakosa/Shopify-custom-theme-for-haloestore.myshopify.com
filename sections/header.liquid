@@ -1,0 +1,441 @@
+<style type="text/css">
+  .logo img {
+    width: {{ section.settings.logo_img_width | escape }}px;
+  }
+
+  {% if section.settings.nav_featured_link != blank %}
+  #main-nav .featured-link > a {
+    color: {{ section.settings.nav_featured_col }};
+  }
+  {% endif %}
+</style>
+
+{% if template == 'gift_card' %}
+
+{% comment %} Gift card template logo {% endcomment %}
+{% if section.settings.logo != blank %}
+<h1 class="logo">
+  {% capture img_size %}{{ section.settings.logo_img_width | times: 2 }}x{% endcapture %}
+  <img src="{{ section.settings.logo | img_url: img_size }}" alt="{{ section.settings.logo.alt | escape }}" />
+</h1>
+{% else %}
+<h1>{{ shop.name }}</h1>
+{% endif %}
+
+{% else %}
+
+<div data-section-type="header">
+  {% if section.settings.announcement_show %}
+  {% unless template != 'index' and section.settings.announcement_home_only %}
+    <style type="text/css">
+      .announcement {
+        background: {{ section.settings.announcement_bar_col }};
+        color: {{ section.settings.announcement_text_col }};
+      }
+    </style>
+    <div class="announcement">
+      {% if section.settings.announcement_link != blank %}<a href="{{ section.settings.announcement_link }}">{% endif %}
+      <div class="announcement__inner">
+        {{ section.settings.announcement_text }}
+      </div>
+      {% if section.settings.announcement_link != blank %}</a>{% endif %}
+    </div>
+  {% endunless %}
+  {% endif %}
+
+  <div id="pageheader">
+
+    {% capture logo_html %}
+    <div class="logo">
+      <a href="/" title="{{ shop.name }}">
+        {% if section.settings.logo != blank %}
+        {% capture img_size %}{{ section.settings.logo_img_width | times: 2 }}x{% endcapture %}
+        <img src="{{ section.settings.logo | img_url: img_size }}" alt="{{ section.settings.logo.alt | escape }}" />
+        {% else %}
+        <span class="logotext">{{ shop.name }}</span>
+        {% endif %}
+      </a>
+    </div><!-- /#logo -->
+    {% endcapture %}
+
+    <div id="mobile-header" class="cf">
+      <button class="notabutton mobile-nav-toggle" aria-label="{{ 'general.navigation.menu_toggle_aria_label' | t | escape }}" aria-controls="main-nav">
+        {% include 'svg-menu' %}
+      </button>
+      {{ logo_html }}
+      <a href="/{% if template != 'cart' %}cart{% else %}cart{% endif %}" class="cart-count">
+        <span class="beside-svg">({% render 'product-personalizer-helper' ,item:item,pplr: 'cart-item-count' %})</span>
+        {% include 'svg-cart' %}
+      </a>
+    </div>
+
+    <div class="logo-area logo-pos-{{ section.settings.logo_pos }} cf">
+
+      {% unless section.settings.logo_pos == 'below' %}<div class="container">{{ logo_html }}</div>{% endunless %}
+
+      <div class="util-area">
+        <div class="search-box elegant-input">
+          <form class="search-form" action="/search" method="get">
+            {% include 'svg-search' %}
+            <label class="search-box-label" for="header-search">{{ 'layout.header.search' | t }}</label>
+            <input type="text" id="header-search" name="q" autocomplete="off"/>
+            <button class="button" type="submit"><span class="button__icon">{% include 'svg-chevron-right' %}</span></button>
+            <input type="hidden" name="type" value="{{ settings.search_type }}" />
+          </form>
+
+          {% if section.settings.show_social_icons %}
+          {% include 'social-icons' %}
+          {% endif %}
+        </div>
+
+        <div class="utils">
+          {% if shop.customer_accounts_enabled %}
+            <div class="account-links-inline contains-dropdown">
+              {% if customer %}
+                <a href="#" class="contains-dropdown__toggle">Account</a>
+                <div class="dropdown">
+                  <div class="dropdown__inner">
+                    <div class="your-acct"><a href="/account">{{ 'layout.customer.account' | t }}</a></div>
+                    <div class="logout">{{ 'layout.customer.log_out' | t | customer_logout_link }}</div>
+                  </div>
+                </div>
+              {% elsif section.settings.nav_show_reg %}
+                <a href="#" class="contains-dropdown__toggle">Account</a>
+                <div class="dropdown">
+                  <div class="dropdown__inner">
+                    <div class="login">{{ 'layout.customer.log_in' | t | customer_login_link }}</div>
+                    <div class="register">{{ 'layout.customer.register' | t | customer_register_link }}</div>
+                  </div>
+                </div>
+              {% else %}
+                <div class="login">{{ 'layout.customer.log_in' | t | customer_login_link }}</div>
+              {% endif %}
+            </div>
+          {% endif %}
+
+          {% include 'currencies-switcher' %}
+
+          <div class="cart-summary">
+            <a href="/{% if template != 'cart' %}cart{% else %}checkout{% endif %}" class="cart-count {% if section.settings.use_btn_style_cart_link %}button{% endif %}">
+              <span class="cart-count__text">{{ 'layout.header.cart' | t }} ({% render 'product-personalizer-helper' ,item:item,pplr: 'cart-item-count' %})</span>
+              {% unless section.settings.use_btn_style_cart_link %}
+                {% include 'svg-cart' %}
+              {% endunless %}
+            </a>
+          </div>
+        </div><!-- /.utils -->
+      </div><!-- /.util-area -->
+
+      {% if section.settings.logo_pos == 'below' %}<div class="container">{{ logo_html }}</div>{% endif %}
+
+    </div><!-- /.logo-area -->
+  </div><!-- /#pageheader -->
+
+  {% assign featured_links = section.settings.nav_featured_link | split: ', ' %}
+  <div id="main-nav" class="nav-row {% if section.settings.nav_autoexpand %}autoexpand{% endif %}">
+    <div class="mobile-features">
+      <form class="mobile-search" action="/search" method="get">
+        <i></i>
+        <input type="text" name="q" placeholder="{{ 'layout.header.search' | t }}"/>
+        <button type="submit" class="notabutton">{% include 'svg-search' %}</button>
+        <input type="hidden" name="type" value="{{ settings.search_type }}" />
+      </form>
+    </div>
+    <div class="multi-level-nav" role="navigation" aria-label="{{ 'general.navigation.main_navigation_aria_label' | t | escape }}">
+      <div class="tier-1">
+        <ul>
+          {% for link in linklists[section.settings.menu_linklist].links %}
+          <li class="{% if link.active %}active{% endif %}{% if link.links != blank %} contains-children{% endif %}{% if featured_links contains link.title %} featured-link{% endif %}">
+            <a href="{{ link.url }}" {% if link.links != blank %}class="has-children" aria-haspopup="true"{% endif %}>
+              {{ link.title }}
+              {% if link.links != blank %}
+              <span class="exp"><span>+</span>{% include 'icon-chevron-down' %}</span>
+              {% endif %}
+            </a>
+
+            {% if link.links != blank %}
+            <ul>
+              {% for child_link in link.links %}
+              <li class="{% if child_link.active %}active{% endif %}{% if child_link.links != blank %} contains-children{% endif %}{% if featured_links contains child_link.title %} featured-link{% endif %}">
+                <a href="{{ child_link.url }}" class="{% if child_link.links != blank %}has-children {% if child_link.title contains 'LISTED' %}listing-title{% endif %}{% endif %}" {% if child_link.links != blank %}aria-haspopup="true"{% endif %}>
+                  {{ child_link.title | remove: ' LISTED' }}
+                  {% if child_link.links != blank %}
+                  <span class="exp"><span>+</span>{% include 'icon-chevron-down' %}</span>
+                  {% endif %}
+                </a>
+
+                {% if child_link.links != blank %}
+                <ul{% if child_link.title contains 'LISTED' %} class="listed"{% endif %}>
+                  {% for child_child_link in child_link.links %}
+                  <li class="{% if child_child_link.active %}active{% endif %}{% if featured_links contains child_child_link.title %} featured-link{% endif %}">
+                    <a href="{{ child_child_link.url }}">{{ child_child_link.title }}</a>
+                  </li>
+                  {% endfor %}
+                </ul>
+                {% endif %}
+              </li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+
+
+        {% capture social_icons_html %}{% include 'social-icons' %}{% endcapture %}
+        {% if social_icons_html contains '<li>' %}<div class="mobile-social">{{ social_icons_html }}</div>{% endif %}
+
+        {% if shop.customer_accounts_enabled %}
+        <ul class="account-links">
+          {% if customer %}
+            <li class="your-acct"><a href="/account">{{ 'layout.customer.account' | t }}</a></li>
+            <li class="logout">{{ 'layout.customer.log_out' | t | customer_logout_link }}</li>
+          {% else %}
+            {% if section.settings.nav_show_reg %}
+              <li class="register">{{ 'layout.customer.register' | t | customer_register_link }}</li>
+            {% endif %}
+            <li class="login">{{ 'layout.customer.log_in' | t | customer_login_link }}</li>
+          {% endif %}
+        </ul>
+        {% endif %}
+      </div>
+    </div>
+    <div class="mobile-currency-switcher">{% include 'currencies-switcher' %}</div>
+  </div><!-- /#main-nav -->
+
+
+  {% if section.settings.head_not_home_only == false or template == 'index' %}
+
+  <div id="store-messages" class="messages-{{ section.blocks.size }}">
+    <div class="container cf">
+      {% for block in section.blocks %}
+
+      <div class="message message-{{ forloop.index }}">
+        {% if block.settings.link_url != blank %}
+        <a href="{{ block.settings.link_url }}">
+          {% endif %}
+
+          {% if block.settings.heading != blank %}
+            <h6 class="title">{{ block.settings.heading | escape }}</h6>
+          {% endif %}
+          {% if block.settings.subheading != blank %}
+            <span class="tagline">{{ block.settings.subheading | escape }}</span>
+          {% endif %}
+
+          {% if block.settings.link_url != blank %}
+        </a>
+        {% endif %}
+
+        {% unless forloop.first %}<div class="fluff"></div>{% endunless %}
+      </div>
+
+      {% endfor %}
+    </div>
+  </div><!-- /#store-messages -->
+
+  {% if section.settings.head_not_mob_show %}
+  <div id="store-messages-mobile">
+    <div class="container">
+      {% if section.settings.head_not_mob_url != blank %}
+      <a href="{{ section.settings.head_not_mob_url }}">
+        {% endif %}
+        {{ section.settings.head_not_mob_text | escape }}
+        {% if section.settings.head_not_mob_url != blank %}
+      </a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% endif %}
+</div>
+
+{% endif %}
+
+
+{% schema %}
+  {
+    "name": "Header",
+    "max_blocks": 3,
+    "settings": [
+      {
+        "type": "checkbox",
+        "id": "use_btn_style_cart_link",
+        "label": "Show cart link as button",
+        "info": "Only applies to desktop layout"
+      },
+      {
+        "type": "checkbox",
+        "id": "nav_show_reg",
+        "label": "Show 'Register' account link",
+        "info": "Requires customer accounts to be enabled in Settings > Checkout",
+        "default": false
+      },
+      {
+        "type": "checkbox",
+        "id": "show_social_icons",
+        "label": "Show social icons",
+        "default": true
+      },
+      {
+        "type": "header",
+        "content": "Navigation"
+      },
+      {
+        "type": "link_list",
+        "id": "menu_linklist",
+        "label": "Menu",
+        "default": "main-menu"
+      },
+      {
+        "type": "checkbox",
+        "id": "nav_autoexpand",
+        "label": "Automatically expand navigation to current page"
+      },
+      {
+        "type": "text",
+        "id": "nav_featured_link",
+        "label": "Featured link",
+        "info": "Enter the title of a link to highlight it in a different color",
+        "default": "Sale"
+      },
+      {
+        "type": "color",
+        "id": "nav_featured_col",
+        "label": "Featured link color",
+        "default": "#dd6666"
+      },
+      {
+        "type": "header",
+        "content": "Logo"
+      },
+      {
+        "type": "image_picker",
+        "id": "logo",
+        "label": "Custom logo image",
+        "info": "520 x 200px (recommended)"
+      },
+      {
+        "type": "text",
+        "id": "logo_img_width",
+        "label": "Logo width",
+        "info": "Defined in pixels. Do not add the 'px' unit.",
+        "default": "300"
+      },
+      {
+        "type": "select",
+        "id": "logo_pos",
+        "label": "Logo position",
+        "options": [
+          {
+            "value": "",
+            "label": "Same row as search\/cart"
+          },
+          {
+            "value": "above",
+            "label": "Above search\/cart"
+          },
+          {
+            "value": "below",
+            "label": "Below search\/cart"
+          }
+        ]
+      },
+      {
+        "type": "header",
+        "content": "Announcement bar"
+      },
+      {
+        "type": "checkbox",
+        "id": "announcement_show",
+        "label": "Show announcement bar",
+        "default": false
+      },
+      {
+        "type": "checkbox",
+        "id": "announcement_home_only",
+        "label": "Home page only",
+        "default": false
+      },
+      {
+        "type": "text",
+        "id": "announcement_text",
+        "label": "Text",
+        "default": "Announce something here"
+      },
+      {
+        "type": "url",
+        "id": "announcement_link",
+        "label": "Link"
+      },
+      {
+        "type": "color",
+        "id": "announcement_bar_col",
+        "label": "Bar",
+        "default": "#4a4a4a"
+      },
+      {
+        "type": "color",
+        "id": "announcement_text_col",
+        "label": "Text",
+        "default": "#ffffff"
+      },
+      {
+        "type": "header",
+        "content": "Store messages"
+      },
+      {
+        "type": "paragraph",
+        "content": "These are displayed under the main menu - great for promotions and notices"
+      },
+      {
+        "type": "checkbox",
+        "id": "head_not_home_only",
+        "label": "Show only on home page"
+      },
+      {
+        "type": "header",
+        "content": "Mobile store message"
+      },
+      {
+        "type": "checkbox",
+        "id": "head_not_mob_show",
+        "label": "Enable",
+        "default": false
+      },
+      {
+        "type": "text",
+        "id": "head_not_mob_text",
+        "label": "Text"
+      },
+      {
+        "type": "url",
+        "id": "head_not_mob_url",
+        "label": "Link URL"
+      }
+    ],
+    "blocks": [
+      {
+        "type": "message",
+        "name": "Store message",
+        "settings": [
+          {
+            "type": "text",
+            "id": "heading",
+            "label": "Heading"
+          },
+          {
+            "type": "text",
+            "id": "subheading",
+            "label": "Subheading"
+          },
+          {
+            "type": "url",
+            "id": "link_url",
+            "label": "Link URL"
+          }
+        ]
+      }
+    ]
+  }
+{% endschema %}

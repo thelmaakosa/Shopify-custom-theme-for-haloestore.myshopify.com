@@ -1,0 +1,265 @@
+{%- if collection -%}
+  {% capture product_url %}{{ product.url | within: collection }}{% endcapture %}
+{%- else -%}
+  {% capture product_url %}{{ product.url }}{% endcapture %}
+{%- endif -%}
+
+{%- if settings.prod_thumb_hover_image and product.images.size > 1 and settings.prod_hov_type != 'hover' -%}
+  {%- assign show_hover_image = true -%}
+{%- else -%}
+  {%- assign show_hover_image = false -%}
+{%- endif -%}
+
+<div data-product-id="{{ product.id }}" class="product-block detail-mode-{{ settings.prod_hov_type }} {% if settings.prod_thumb_variable_width %}variable-width{% else %}fixed-width{% endif %}">
+  <div class="block-inner">
+    <a class="product-link" href="{{ product_url }}">
+      <div class="image-cont {% if show_hover_image %}with-secondary-image {% if product.featured_image.aspect_ratio == product.images[1].aspect_ratio %}same-aspect-ratio{% endif %}{% endif %}">
+        <div class="image-label-wrap">
+          {%- if settings.prod_thumb_variable_width -%}
+          <style type="text/css">
+          .product-block[data-product-id="{{ product.id }}"] .block-inner .image-cont .rimage-outer-wrapper {
+            width: {{ product.featured_image.aspect_ratio | times: settings.prod_thumb_height | floor }}px;
+          }
+          @media (max-width: 767px) {
+            .product-block[data-product-id="{{ product.id }}"] .block-inner .image-cont .rimage-outer-wrapper {
+              width: {{ product.featured_image.aspect_ratio | times: 180 | floor }}px;
+            }
+          }
+          </style>
+          {%- endif -%}
+          <div class="primary-image">
+            {% include 'responsive-image', image: product.featured_image, manual_image_load: manual_image_load %}
+          </div>
+          {% if show_hover_image %}
+            <div class="secondary-image lazyload{% if manual_image_load %}--manual{% endif %} rimage-background rimage-background--atop"
+              data-bgset="{% include 'bgset', image: product.images[1] %}"
+              data-sizes="auto"
+              data-parent-fit="contain"></div>
+          {% endif %}
+          {% include 'product-label' with product %}
+        </div>
+      </div>
+
+      <div class="product-info">
+        <div class="inner">
+          <div class="innerer">
+            <div class="title">{{ product.title }}</div>
+            <div class="dash">-</div>
+
+            {% if product.compare_at_price_max > product.price %}
+            <div class="reducedfrom"><span class="amount theme-money">{{ product.compare_at_price_max | money }}</span></div>
+            {% endif %}
+            <span class="price">
+              {% if product.price_varies %}
+              <span class="from">{{ 'products.listing.from' | t }}</span>
+              {% endif %}
+              <span class="theme-money">{{ product.price | money }}</span>
+            </span>
+
+            <span class="shopify-product-reviews-badge" data-id="{{ product.id }}"></span>
+          </div>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  {% if settings.prod_thumb_detail_show or include_quick_buy_markup %}
+  {% assign variant = product.selected_or_first_available_variant %}
+
+  <div class="product-detail {% if variant.compare_at_price > variant.price %}variant-status--on-sale{% endif %}">
+    <a href="#" class="close-detail">{% include 'svg-x' %}</a>
+    <div class="container inner cf">
+
+      <div class="gallery layout-column-half-left {% if product.images.size > 1 %}has-thumbnails{% endif %}">
+        {% assign featured_image = product.selected_or_first_available_variant.featured_image | default: product.featured_image %}
+
+        <div class="main-image">
+          <a href="{{ product_url }}" data-full-size-url="{{ featured_image | product_img_url: 'master' }}">
+            {% include 'responsive-image', image: featured_image, manual_image_load: true, max_height: 500 %}
+          </a>
+        </div>
+
+        {% if product.images.size > 1 %}
+        <div class="thumbnails">
+          {% for image in product.images %}
+          <a {% if image.src == featured_image.src %} class="active" {% endif %} title="{{ image.alt | escape }}"
+             href="{{ image | product_img_url: 'master' }}"
+             data-full-size-url="{{ image | product_img_url: 'master' }}">
+            {% include 'responsive-image', image: image, manual_image_load: true, max_height: 500 %}
+          </a>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="detail layout-column-half-right">
+        {% include 'product-label' with product %}
+
+        <h2 class="h1-style title"><a href="{{ product_url }}">{{ product.title }}</a></h2>
+
+        <span class="shopify-product-reviews-badge" data-id="{{ product.id }}"></span>
+
+        <h2 class="h4-style price-area">
+          {% if variant.compare_at_price > variant.price %}
+          <span class="was-price theme-money">{{ variant.compare_at_price | money }}</span>
+          {% endif %}
+          <span class="price theme-money">{{ variant.price | money }}</span>
+        </h2>
+
+
+        {% if settings.prod_show_vendor or settings.prod_show_sku %}
+          <div class="lightly-spaced-row">
+            {%- if settings.prod_show_vendor -%}
+              {%- comment -%}
+              Do we have a collection that has the same name as our product vendor name?
+              If we do, let's have the vendor link point to it.
+              If not, we will point to the automatic vendor collection.
+              {%- endcomment -%}
+              {%- assign product_vendor_handle = product.vendor | handle -%}
+              {%- if collections[product_vendor_handle].handle == product_vendor_handle -%}
+                {%- assign vendor_url = collections[product_vendor_handle].url -%}
+              {%- else -%}
+                {%- assign vendor_url = product.vendor | url_for_vendor -%}
+              {%- endif -%}
+              <div class="vendor">{{ 'products.product.vendor' | t }} {{ product.vendor | link_to: vendor_url }}</div>
+            {%- endif -%}
+
+            {%- if settings.prod_show_sku -%}
+              <div class="sku {% if product.selected_or_first_available_variant.sku == blank %}sku--no-sku{% endif %}">{{ 'products.product.sku' | t }} <span class="sku__value">{{ product.selected_or_first_available_variant.sku }}</span></div>
+            {%- endif -%}
+          </div>
+        {% endif %}
+
+        <div class="product-form section">
+          {% if product.available %}
+
+          {% form 'product', product, class: 'form', data-product-id: product.id %}
+            <div class="input-row">
+              {% if product.variants.size > 1 %}
+
+              <div class="option-selectors">
+                {% for option in product.options_with_values %}
+                  <div class="selector-wrapper cf">
+                    <label {% if option.name == 'default' %}class="hidden"{% endif %} for="option-{{ forloop.index0 }}">
+                      {{ option.name }}
+                    </label>
+                    <span class="styled-select" {% if settings.prod_variant_style == 'blocks' %}data-make-box{% endif %}>
+                      <select id="option-{{ forloop.index0 }}">
+                        {% for value in option.values %}
+                        <option value="{{ value | escape }}" {% if option.selected_value == value %}selected{% endif %}>
+                          {{ value }}
+                        </option>
+                        {% endfor %}
+                      </select>
+                    </span>
+                  </div>
+
+                  {% if settings.show_size_chart and option.name == settings.size_chart_variant %}
+                    <div class="size-chart-container">
+                      <a href="{{ pages[settings.size_chart_page].url }}" target="_blank" class="size-chart-link">
+                        {{ 'products.product.size_chart' | t }}
+                      </a>
+                      <div class="size-chart-content hidden">
+                        <div class="size-chart">
+                          <div class="size-chart__inner user-content">
+                            {{ pages[settings.size_chart_page].content }}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  {% endif %}
+                {% endfor %}
+              </div>
+
+              <select name="id" class="original-selector">
+                {% for variant in product.variants %}
+                <option value="{{ variant.id }}" {% if variant == product.selected_or_first_available_variant %} selected="selected"{% endif %} data-stock="{% if variant.inventory_management == 'shopify' and variant.inventory_quantity <= 0 %}out{% endif %}">{{ variant.title | escape }}</option>
+                {% endfor %}
+              </select>
+
+
+              {% else %}
+              <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}" />
+
+              {% unless product.has_only_default_variant %}
+                <div class="singleopt">
+                  {% for option in product.options %}
+                    {% assign opt_idx = 'option' | append: forloop.index %}
+                    <label>{{ option }}: {{ product.variants.first[opt_idx] }}</label>
+
+                    {% if settings.show_size_chart and option == settings.size_chart_variant %}
+                      <div class="size-chart-container">
+                        <a href="{{ pages[settings.size_chart_page].url }}" target="_blank" class="size-chart-link">
+                          {{ 'products.product.size_chart' | t }}
+                        </a>
+                        <div class="size-chart-content hidden">
+                          <div class="size-chart">
+                            <div class="size-chart__inner user-content">
+                              {{ pages[settings.size_chart_page].content }}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+              {% endunless %}
+
+              {% endif %}
+            </div>
+            <div class="input-row quantity-submit-row {% if settings.enable_payment_button %}has-spb{% endif %}">
+              <span class="quantity-submit-row__quantity">
+                <label for="quantity_{{ product.id }}">{{ 'products.product.quantity' | t }}</label>
+                <input id="quantity_{{ product.id }}" class="select-on-focus input--large" name="quantity" value="1" size="2" />
+              </span>
+              <span class="quantity-submit-row__submit">
+                <input class="button button--large" type="submit" value="{{ 'products.product.add_to_cart' | t }}" />
+              </span>
+              {% if settings.enable_payment_button %}
+                {{ form | payment_button }}
+              {% endif %}
+            </div>
+
+            {% capture backorder_message %}{{ 'products.product.backorder' | t }}{% endcapture %}
+            {% unless backorder_message == blank %}
+              {% if product.variants.size == 1 %}
+                {% if product.variants.first.inventory_management == 'shopify' and product.variants.first.inventory_quantity < 1 %}
+                  <div class="backorder">
+                    <p><span class="selected-variant">{{ product.title }}</span> {{ backorder_message }}</p>
+                  </div>
+                {% endif %}
+              {% else %}
+                <div class="backorder hidden">
+                  <p><span class="selected-variant"></span> {{ backorder_message }}</p>
+                </div>
+              {% endif %}
+            {% endunless %}
+          {% endform %}
+
+          {% else %}
+
+          <p><em>{{ 'products.product.product_unavailable' | t }}</em></p>
+
+          {% endif %}
+        </div>
+
+        {% comment %} UN-COMMENT THE CODE BELOW TO SHOW A SMALL EXCERPT OF THE DESCRIPTION {% endcomment %}
+
+        {% comment %}
+        <div class="description user-content">{{ product.description | strip_html | truncate: 150 }}</div>
+        {% endcomment %}
+
+        <a class="more" href="{{ product_url }}">
+          {{ 'products.quick_buy.read_more' | t }}
+          <span class="icon-small icon-natcol">{% include 'svg-chevron-right' %}</span>
+        </a>
+      </div>
+
+      <script type="application/json" id="ProductJson-{{ product.id }}">
+        {{ product | json }}
+      </script>
+
+    </div>
+  </div>
+  {% endif %}
+</div>

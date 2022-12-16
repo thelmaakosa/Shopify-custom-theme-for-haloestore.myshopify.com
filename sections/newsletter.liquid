@@ -1,0 +1,58 @@
+{% assign brightness = section.settings.background_color | color_brightness %}
+{% assign alpha = section.settings.background_color | color_extract: 'alpha' %}
+<style type="text/css">
+  .section-id-{{ section.id }} {
+    background: {{ section.settings.background_color }};
+  }
+  {% if brightness < 190 and alpha > 0 %}
+  .section-id-{{ section.id }},
+  .section-id-{{ section.id }} .hometitle,
+  .section-id-{{ section.id }} a {
+    color: #fff;
+  }
+  {% endif %}
+</style>
+
+<div class="section-signup section-id-{{ section.id }}">
+  <div class="container strongly-padded-row align-center">
+
+    <h1 class="hometitle h4-style in-content">{{ section.settings.title | escape }}</h1>
+
+    <div class="user-content">{{ section.settings.text }}</div>
+
+    {% include 'signup-form' %}
+
+  </div>
+</div>
+
+{% schema %}
+  {
+    "name": "Newsletter",
+    "settings": [
+      {
+        "type": "text",
+        "id": "title",
+        "label": "Heading",
+        "default": "Signup for our newsletter"
+      },
+	    {
+        "type": "richtext",
+        "id": "text",
+        "label": "Subheading"
+      },
+      {
+        "type": "color",
+        "id": "background_color",
+        "label": "Background color",
+        "default": "#ffffff"
+      }
+    ],
+    "presets": [
+      {
+        "name": "Newsletter",
+        "category": "Promotional",
+        "settings": {}
+      }
+    ]
+  }
+{% endschema %}

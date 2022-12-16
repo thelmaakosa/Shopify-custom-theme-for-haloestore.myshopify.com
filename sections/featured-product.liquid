@@ -1,0 +1,249 @@
+{% assign product = all_products[section.settings.product] %}
+
+{% if product != blank and section.settings.show_all_images and product.images.size > 1 %}
+<style>
+{% for image in product.images %}
+.section-{{ section.id }} .product-collage--focus .product-collage__image[data-image-index="{{ forloop.index0 }}"] {
+  transform: translate3d(0, {% cycle '4', '8', '12' %}px, 0) rotate({% cycle '2', '-2', '4', '-4' %}deg);
+}
+{% endfor %}
+</style>
+{% endif %}
+
+{% assign variant = product.selected_or_first_available_variant %}
+
+<div class="container section-{{ section.id }} featured-product product-detail {% if variant.compare_at_price > variant.price %}variant-status--on-sale{% endif %} strongly-spaced-row layout-content-with-image-{{ section.settings.layout }} layout-content-with-image--large-image valign-middle cf" data-section-type="featured-product">
+  {%- capture image_html -%}
+    <div class="image-cont gallery">
+      <div class="product-collage {% if section.settings.show_image_border %}product-collage--show-borders{% endif %} {% if product != blank and section.settings.show_all_images and product.images.size > 1 %}product-collage--multiple-images{% endif %}">
+        <div class="product-collage__inner">
+          {% if product != blank %}
+            {% if section.settings.show_all_images %}
+              {% for image in product.images %}
+                <div class="product-collage__image {% if forloop.first %}active{% endif %} lazyload--placeholder" data-image-index="{{ forloop.index0 }}" data-full-size-url="{{ image | img_url: 'master' }}">
+                  {% include 'responsive-image', image: image %}
+                </div>
+              {% endfor %}
+            {% else %}
+              <div class="product-collage__image lazyload--placeholder" data-image-index="0">
+                {% include 'responsive-image', image: product.featured_image %}
+              </div>
+            {% endif %}
+
+          {% else %}
+            <div class="product-collage__image active" data-image-index="0">
+              <div class="placeholder-image">{{ 'product-1' | placeholder_svg_tag: 'placeholder-svg' }}</div>
+            </div>
+          {% endif %}
+        </div>
+        {% if product != blank and section.settings.show_all_images and product.images.size > 1 %}
+        <a class="product-collage__prev" href="#"></a>
+        <a class="product-collage__next" href="#"></a>
+        <span class="product-collage__cursor"></span>
+        {% endif %}
+      </div>
+    </div>
+  {%- endcapture -%}
+
+  {% if section.settings.layout == 'left' %}{{ image_html }}{% endif %}<div class="content detail">
+
+  {% if product != blank %}
+    {% include 'product-label' with product %}
+    <h1 class="title in-content">{{ product.title | link_to: product.url }}</h1>
+
+    <span class="shopify-product-reviews-badge" data-id="{{ product.id }}"></span>
+
+    <h2 class="h4-style price-area">
+      {% if variant.price_varies %}
+      <span class="from">{{ 'products.listing.from' | t }}</span>
+      {% endif %}
+      {% if variant.compare_at_price > variant.price %}
+      <span class="was-price theme-money">{{ variant.compare_at_price | money }}</span>
+      {% endif %}
+      <span class="price theme-money">{{ variant.price | money }}</span>
+    </h2>
+
+    <div class="user-content">{{ section.settings.text }}</div>
+
+    <div class="product-form section">
+      {% if product.available %}
+      {% form 'product', product, class: 'form', data-product-id: product.id %}
+        <div class="input-row">
+          {% if product.variants.size > 1 %}
+
+            <div class="option-selectors">
+              {% for option in product.options_with_values %}
+              <div class="selector-wrapper cf">
+                <label {% if option.name == 'default' %}class="hidden"{% endif %} for="option-{{ option.name | handle }}">
+                  {{ option.name }}
+                </label>
+                <span class="styled-select" {% if settings.prod_variant_style == 'blocks' %}data-make-box{% endif %}>
+                  <select id="option-{{ option.name | handle }}">
+                    {% for value in option.values %}
+                    <option value="{{ value | escape }}" {% if option.selected_value == value %}selected{% endif %}>
+                      {{ value }}
+                    </option>
+                    {% endfor %}
+                  </select>
+                </span>
+              </div>
+              {% endfor %}
+            </div>
+
+            <select name="id" class="original-selector">
+              {% for variant in product.variants %}
+              <option value="{{ variant.id }}" {% if variant == product.selected_or_first_available_variant %} selected="selected"{% endif %} data-stock="{% if variant.inventory_management == 'shopify' and variant.inventory_quantity <= 0 %}out{% endif %}">{{ variant.title | escape }}</option>
+              {% endfor %}
+            </select>
+
+
+          {% else %}
+            <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}" />
+
+            {% unless product.variants.first.title contains 'Default' %}
+              <label class="singleopt">
+                {% for option in product.options %}
+                {% assign opt_idx = 'option' | append: forloop.index %}
+                {{ option }}: {{ product.variants.first[opt_idx] }}<br/>
+                {% endfor %}
+              </label>
+            {% endunless %}
+
+          {% endif %}
+        </div>
+        <div class="input-row quantity-submit-row {% if section.settings.enable_payment_button %}has-spb{% endif %}">
+          {% if section.settings.show_quantity %}
+            <span class="quantity-submit-row__quantity">
+              <label for="quantity_{{ product.id }}">{{ 'products.product.quantity' | t }}</label>
+              <input type="text" id="quantity_{{ product.id }}" class="select-on-focus input--large" name="quantity" value="1" size="2" />
+            </span>
+          {% else %}
+            <input type="hidden" name="quantity" value="1" />
+          {% endif %}
+          <span class="quantity-submit-row__submit">
+            <input class="button button--large" type="submit" value="{{ 'products.product.add_to_cart' | t }}" />
+          </span>
+          {% if section.settings.enable_payment_button %}
+            {{ form | payment_button }}
+          {% endif %}
+        </div>
+
+        {% capture backorder_message %}{{ 'products.product.backorder' | t }}{% endcapture %}
+        {% unless backorder_message == blank %}
+          {% if product.variants.size == 1 %}
+            {% if product.variants.first.inventory_management == 'shopify' and product.variants.first.inventory_quantity < 1 %}
+              <div class="backorder">
+                <p><span class="selected-variant">{{ product.title }}</span> {{ backorder_message }}</p>
+              </div>
+            {% endif %}
+          {% else %}
+            <div class="backorder hidden">
+              <p><span class="selected-variant"></span> {{ backorder_message }}</p>
+            </div>
+          {% endif %}
+        {% endunless %}
+      {% endform %}
+
+      {% else %}
+
+      <p><em>{{ 'products.product.product_unavailable' | t }}</em></p>
+
+      {% endif %}
+    </div>
+
+  {% else %}
+    <h1 class="title in-content">{{ 'onboarding.product.product_title' | t }}</h1>
+    <h2 class="h4-style price-area">
+      <span class="was-price">{{ 2999 | money }}</span>
+      <span class="price">{{ 1999 | money }}</span>
+    </h2>
+    <div class="user-content">{{ section.settings.text }}</div>
+    <div class="product-form">
+      <div class="input-row quantity-submit-row">
+        <input type="{% if section.settings.show_quantity %}text{% else %}hidden{% endif %}" class="select-on-focus" name="quantity" value="1" size="2" />
+        <input class="button" type="submit" value="{{ 'products.product.add_to_cart' | t }}" />
+      </div>
+    </div>
+  {% endif %}
+
+  </div>{% if section.settings.layout == 'right' %}{{ image_html }}{% endif %}
+</div>
+
+{% if product != blank %}
+<script type="application/json" id="ProductJson-{{ product.id }}">
+  {{ product | json }}
+</script>
+{% endif %}
+
+{% schema %}
+  {
+    "name": "Featured product",
+    "settings": [
+      {
+        "type": "product",
+        "id": "product",
+        "label": "Product"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_quantity",
+        "label": "Show quantity",
+        "default": false
+      },
+      {
+        "type": "checkbox",
+        "id": "enable_payment_button",
+        "label": "Show dynamic checkout button",
+        "info": "Lets customers check out directly using a familiar payment method. [Learn more](https://help.shopify.com/manual/using-themes/change-the-layout/dynamic-checkout)",
+        "default": false
+      },
+      {
+        "type": "header",
+        "content": "Images"
+      },
+      {
+        "type": "select",
+        "id": "layout",
+        "label": "Alignment",
+        "options": [
+          {
+            "value": "left",
+            "label": "Left"
+          },
+          {
+            "value": "right",
+            "label": "Right"
+          }
+        ],
+        "default": "right"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_all_images",
+        "label": "Show multiple images",
+        "default": true
+      },
+      {
+        "type": "checkbox",
+        "id": "show_image_border",
+        "label": "Show border when section is in focus",
+        "default": true
+      },
+	    {
+        "type": "richtext",
+        "id": "text",
+        "label": "Description",
+        "default": "<p>Pair some text with a product to highlight features.</p>"
+      }
+    ],
+    "presets": [
+      {
+        "name": "Featured product",
+        "category": "Product",
+        "settings": {
+        }
+      }
+    ]
+  }
+{% endschema %}
+{% render "product-personalizer" , product:product %}

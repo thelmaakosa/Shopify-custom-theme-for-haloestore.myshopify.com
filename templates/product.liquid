@@ -1,0 +1,9 @@
+<div class="index-section--flush powr-popup" id="1acfdd37_1554245699"></div> {% comment %}
+  The contents of the product.liquid template can be found in /sections/product-template.liquid
+{% endcomment %}
+
+{% section 'product-template' %}
+
+<script type="application/json" id="ProductJson-{{ product.id }}">
+  {{ product | json }}
+</script>
